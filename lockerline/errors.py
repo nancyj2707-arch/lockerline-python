@@ -55,7 +55,9 @@ VALIDATION_BODY = (
 )          # a body that fails validation
 VALIDATION_PARAMS = (
     400, "/errors/validation", "Invalid query parameter"
-)               # an unknown filter value
+)
+INTERNAL = (500, "/errors/internal", "Something went wrong")
+               # an unknown filter value
 
 
 NOT_FOUND = (
