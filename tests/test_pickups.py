@@ -1,7 +1,7 @@
 """A valid code opens the door once, frees it and stamps dwell — atomically."""
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 
-from lockerline.models import Door, Parcel
+from lockerline.models import Door, Event, Parcel
 from tests.conftest import drop
 
 
@@ -18,6 +18,25 @@ def test_pickup_frees_door_and_stamps_dwell(client, clock, db):
         assert parcel.state == "collected" and parcel.dwell_seconds == 158520 and parcel.code_used_at is not None
         assert s.scalar(select(Door).where(Door.no == body["door"])).current_parcel_id is None
     assert client.get("/towers/A/doors").json()["free"] == 48
+
+
+def test_second_pickup_is_refused_and_changes_nothing(client, clock, db):
+    body = drop(client)
+    assert client.post("/pickups", json={"code": body["code"]}).status_code == 200
+
+    def snapshot():
+        with db() as s:
+            p = s.scalar(select(Parcel))
+            door = s.scalar(select(Door).where(Door.no == body["door"]))
+            events = s.scalar(select(func.count()).select_from(Event))
+            return (p.state, p.collected_at, p.code_used_at, p.dwell_seconds, door.current_parcel_id, events)
+
+    before = snapshot()
+    clock.advance(minutes=1)
+    r = client.post("/pickups", json={"code": body["code"]})
+    assert r.status_code == 409 and r.json()["type"] == "/errors/code-used"
+    assert snapshot() == before                 # parcel, door and event count unchanged
+    assert before[4] is None and before[5] == 3
 
 
 def test_failure_after_parcel_update_rolls_back(client, db):
