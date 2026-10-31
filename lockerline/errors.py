@@ -37,6 +37,14 @@ class NoDoorFree(DomainError):
     status, type, title = 409, "/errors/no-door-free", "No free door of that size"
 
 
+class NoSuchCode(DomainError):
+    status, type, title = 404, "/errors/no-such-code", "No such code"
+
+
+class CodeExpired(DomainError):
+    status, type, title = 404, "/errors/code-expired", "This code has expired"
+
+
 # status, type, title of the errors that are not domain refusals
 VALIDATION_BODY = (
     422, "/errors/validation", "The request body is not valid"

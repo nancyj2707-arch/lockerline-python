@@ -28,6 +28,7 @@ class DoorListItem(BaseModel):
     parcel_id: str | None = None
     dwell_seconds: int | None = None
 
+
 class DoorOut(DoorListItem):
     """One door, read on its own: a holding door also names the flat its parcel is for."""
 
@@ -53,6 +54,10 @@ class DropOut(BaseModel):
     dropped_at: UtcZ
     code: str = Field(description="Shown once, to the courier")
     expires_at: UtcZ
+
+
+class PickupIn(BaseModel):
+    code: str = Field(pattern=r"^\d{6}$")
 
 
 class ParcelOut(BaseModel):
